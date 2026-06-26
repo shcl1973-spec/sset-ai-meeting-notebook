@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0d9488">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SSET AI 筆記">
+    <title>SSET 業務會議 AI 筆記本</title>
+    <link rel="manifest" href="manifest.webmanifest?v=20260626">
+    <link rel="icon" href="app-icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css?v=20260626-mobile">
+  </head>
+  <body>
+    <div class="mobile-appbar">
+      <div>
+        <span class="eyebrow">SSET AI Notebook</span>
+        <strong>業務會議 AI 筆記本</strong>
+      </div>
+      <button id="mobileNewBtn" type="button" aria-label="新增會議">+</button>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="meetings">
+        <div class="brand">
+          <div class="brand-mark">AI</div>
+          <div>
+            <h1>SSET 業務會議 AI 筆記本</h1>
+            <p id="storageState">本機保存中</p>
+          </div>
+        </div>
+
+        <button class="primary-action" id="newMeetingBtn" type="button">新增會議</button>
+
+        <label class="search">
+          <span>搜尋會議</span>
+          <input id="searchInput" type="search" placeholder="客戶、主題、地點">
+        </label>
+
+        <nav class="meeting-list" id="meetingList" aria-label="會議清單"></nav>
+
+        <div class="sidebar-actions">
+          <button id="exportBtn" type="button">匯出</button>
+          <label class="file-button">
+            匯入
+            <input id="importInput" type="file" accept="application/json">
+          </label>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="meeting-header">
+          <div class="title-block">
+            <span class="eyebrow">Meeting Workspace</span>
+            <input id="meetingTitle" class="meeting-title" type="text" placeholder="會議主題">
+            <div class="meeting-meta-grid">
+              <label>日期<input id="meetingDate" type="datetime-local"></label>
+              <label>客戶/公司<input id="meetingClient" type="text" placeholder="公司名稱"></label>
+              <label>地點<input id="meetingPlace" type="text" placeholder="客戶現場、線上、會議室"></label>
+              <label>
+                商機階段
+                <select id="meetingStage">
+                  <option>初訪</option>
+                  <option>需求訪談</option>
+                  <option>方案提案</option>
+                  <option>報價議價</option>
+                  <option>成交追蹤</option>
+                  <option>售後服務</option>
+                </select>
+              </label>
+              <label>
+                決策狀態
+                <select id="decisionStatus">
+                  <option>探索中</option>
+                  <option>有明確需求</option>
+                  <option>等待預算</option>
+                  <option>等待決策人</option>
+                  <option>進入採購</option>
+                  <option>暫緩</option>
+                </select>
+              </label>
+              <label>預估金額<input id="dealValue" type="text" placeholder="例如 300,000"></label>
+              <label>下次聯繫日<input id="nextContactDate" type="date"></label>
+              <label>
+                追蹤優先度
+                <select id="priorityLevel">
+                  <option>一般</option>
+                  <option>高</option>
+                  <option>低</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="header-actions">
+            <button id="printBtn" type="button">列印</button>
+            <button id="duplicateBtn" type="button">複製</button>
+            <button id="deleteBtn" class="danger" type="button">刪除</button>
+          </div>
+        </header>
+
+        <section class="ai-console" id="ai">
+          <div>
+            <span class="eyebrow">AI 作戰板</span>
+            <h2 id="aiHeadline">準備整理會議脈絡</h2>
+            <p id="aiHint">輸入逐字稿、需求或待辦後，AI 整理會自動產生摘要與追蹤信草稿。</p>
+          </div>
+          <div class="ai-metrics">
+            <div><strong id="attendeeCount">0</strong><span>與會人</span></div>
+            <div><strong id="cardCount">0</strong><span>名片</span></div>
+            <div><strong id="taskCount">0</strong><span>待追蹤</span></div>
+            <div><strong id="lastSaved">尚未保存</strong><span>保存</span></div>
+          </div>
+        </section>
+
+        <div class="content-grid">
+          <section class="panel writing-panel" id="sketch">
+            <div class="panel-header">
+              <h2>手寫草稿</h2>
+              <div class="tool-row">
+                <label class="compact-control">筆色<input id="penColor" type="color" value="#0f766e"></label>
+                <label class="compact-control">粗細<input id="penSize" type="range" min="2" max="18" value="5"></label>
+                <button id="eraserBtn" type="button">橡皮擦</button>
+                <button id="clearCanvasBtn" type="button">清除</button>
+              </div>
+            </div>
+            <canvas id="sketchCanvas" width="1100" height="620"></canvas>
+          </section>
+
+          <section class="panel transcript-panel" id="voice">
+            <div class="panel-header">
+              <h2>錄音與逐字稿</h2>
+              <div class="tool-row">
+                <button id="recordBtn" class="record-action" type="button">開始錄音</button>
+                <button id="stopRecordBtn" type="button" disabled>停止</button>
+                <button id="summarizeBtn" class="ai-action" type="button">AI 整理</button>
+              </div>
+            </div>
+            <div class="record-state">
+              <span id="recordDot"></span>
+              <span id="recordStatus">待命</span>
+              <audio id="audioPlayback" controls></audio>
+            </div>
+            <label class="stacked-field">即時逐字稿<textarea id="transcriptText" rows="8" placeholder="錄音時若瀏覽器支援語音辨識，文字會即時出現在這裡。也可以手動貼上逐字稿。"></textarea></label>
+            <label class="stacked-field">重點摘要<textarea id="summaryText" rows="5" placeholder="按 AI 整理後產生會議摘要，也可以自行修改。"></textarea></label>
+          </section>
+
+          <section class="panel notes-panel" id="notes">
+            <div class="panel-header">
+              <h2>會議筆記</h2>
+              <div class="tool-row">
+                <button id="emailDraftBtn" type="button">產生追蹤信</button>
+                <button id="copyEmailBtn" type="button">複製追蹤信</button>
+              </div>
+            </div>
+            <label class="stacked-field">需求與痛點<textarea id="needsText" rows="5"></textarea></label>
+            <label class="stacked-field">提案與承諾<textarea id="proposalText" rows="5"></textarea></label>
+            <label class="stacked-field">下次追蹤<textarea id="followupText" rows="4"></textarea></label>
+            <label class="stacked-field">會後追蹤信<textarea id="followupEmailText" rows="7" placeholder="按下產生追蹤信後可再自行修改。"></textarea></label>
+          </section>
+
+          <aside class="side-stack" id="people">
+            <section class="panel">
+              <div class="panel-header"><h2>與會人</h2></div>
+              <form class="inline-form" id="attendeeForm">
+                <input name="name" required placeholder="姓名">
+                <input name="company" placeholder="公司">
+                <input name="role" placeholder="角色">
+                <input name="phone" placeholder="電話">
+                <button type="submit">加入</button>
+              </form>
+              <div class="people-list" id="attendeeList"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header"><h2>名片</h2></div>
+              <form class="card-form" id="businessCardForm">
+                <input name="name" required placeholder="姓名">
+                <input name="company" placeholder="公司">
+                <input name="title" placeholder="職稱">
+                <input name="phone" placeholder="電話">
+                <input name="email" type="email" placeholder="Email">
+                <textarea name="ocrText" rows="4" placeholder="貼上名片辨識文字，系統會嘗試帶入姓名、公司、電話與 Email。"></textarea>
+                <button id="parseCardBtn" type="button">解析名片文字</button>
+                <label class="file-drop">名片圖片<input name="image" type="file" accept="image/*"></label>
+                <button type="submit">加入名片</button>
+              </form>
+              <div class="card-list" id="businessCardList"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header"><h2>待辦追蹤</h2></div>
+              <form class="task-form" id="taskForm">
+                <input name="title" required placeholder="事項">
+                <input name="owner" placeholder="負責人">
+                <input name="due" type="date">
+                <button type="submit">加入</button>
+              </form>
+              <div class="task-list" id="taskList"></div>
+            </section>
+
+            <section class="panel print-options-panel">
+              <div class="panel-header"><h2>列印內容</h2></div>
+              <label><input id="printCards" type="checkbox" checked> 名片</label>
+              <label><input id="printSketch" type="checkbox" checked> 手寫草稿</label>
+              <label><input id="printTranscript" type="checkbox" checked> 逐字稿</label>
+              <label><input id="printEmail" type="checkbox" checked> 追蹤信</label>
+            </section>
+          </aside>
+        </div>
+      </main>
+    </div>
+
+    <nav class="mobile-tabs" aria-label="手機快速導航">
+      <a href="#meetings">會議</a>
+      <a href="#ai">AI</a>
+      <a href="#sketch">手寫</a>
+      <a href="#voice">錄音</a>
+      <a href="#people">名片</a>
+    </nav>
+
+    <section id="printView" class="print-view" aria-hidden="true"></section>
+
+    <template id="emptyMeetingTemplate">
+      <p class="empty-state">尚無資料</p>
+    </template>
+
+    <script src="app.js?v=20260626-mobile"></script>
+  </body>
+</html>
