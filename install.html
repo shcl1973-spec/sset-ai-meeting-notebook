@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0d9488">
     <title>SSET AI 筆記本 QR 安裝</title>
-    <link rel="manifest" href="manifest.webmanifest?v=v4">
+    <link rel="manifest" href="manifest.webmanifest?v=v5">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=v4">
+    <link rel="stylesheet" href="styles.css?v=v5">
   </head>
   <body class="install-page">
     <main class="install-shell">
       <section class="install-hero">
         <div class="brand-mark">AI</div>
         <span class="eyebrow">QR Install</span>
-        <h1>SSET 業務會議 AI 筆記本 <span class="version-badge">v4</span></h1>
+        <h1>SSET 業務會議 AI 筆記本 <span class="version-badge">v5</span></h1>
         <p>手機掃描 QR Code 後，用瀏覽器開啟，再選擇「加入主畫面」即可像 App 一樣使用。</p>
       </section>
 
@@ -36,6 +36,16 @@
       </section>
 
       <section class="install-card">
+        <h2>直接安裝到手機</h2>
+        <ol>
+          <li>正式安裝請使用 HTTPS 網址，例如 GitHub Pages。</li>
+          <li>iPhone：用 Safari 開啟網址，按分享，選「加入主畫面」。</li>
+          <li>Android：用 Chrome 開啟網址，選「安裝應用程式」或「加入主畫面」。</li>
+          <li>安裝後第一次開啟，在「雲端同步」貼上 shcl1973 Google Apps Script 的 /exec 同步網址。</li>
+        </ol>
+      </section>
+
+      <section class="install-card">
         <h2>同步架構說明</h2>
         <p>同 Wi-Fi 使用時，手機會連到這台電腦的區網網址。若使用 shcl1973 Google 雲端硬碟的 Apps Script 同步端點，手機與電腦可跨網路共用資料。</p>
         <ol>
@@ -47,13 +57,20 @@
     </main>
 
     <script>
+      const APP_VERSION = "v5";
       const qrGrid = document.querySelector("#qrGrid");
       const qrApi = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=";
+      const currentAppRoot = new URL("./", location.href);
+
+      function appUrl(url) {
+        const installUrl = new URL(url);
+        installUrl.search = `?v=${APP_VERSION}`;
+        installUrl.hash = "";
+        return installUrl;
+      }
 
       function card(url, label) {
-        const installUrl = new URL(url);
-        installUrl.pathname = "/";
-        installUrl.search = "?v=v4";
+        const installUrl = appUrl(url);
         return `
           <article class="qr-card">
             <img alt="${label} QR Code" src="${qrApi}${encodeURIComponent(installUrl.href)}">
@@ -65,7 +82,7 @@
         `;
       }
 
-      fetch("/api/install-info")
+      fetch(new URL("api/install-info", currentAppRoot))
         .then((res) => res.json())
         .then((info) => {
           const items = [];
@@ -76,7 +93,7 @@
           qrGrid.innerHTML = items.join("");
         })
         .catch(() => {
-          qrGrid.innerHTML = card(location.origin, "目前網址");
+          qrGrid.innerHTML = card(currentAppRoot.href, "HTTPS 手機安裝網址");
         });
     </script>
   </body>

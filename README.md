@@ -11,14 +11,14 @@ node .\server.js
 開啟：
 
 ```text
-http://127.0.0.1:8000/?v=v4
+http://127.0.0.1:8000/?v=v5
 ```
 
 在手機瀏覽器開啟同一網址後，可使用瀏覽器的「加入主畫面」安裝成 App。
 
 ## 版本規則
 
-目前手機安裝版為 `v4`。日後每次更新請用 `v+n` 表示，例如下一版為 `v5`、再下一版為 `v6`。
+目前手機安裝版為 `v5`。日後每次更新請用 `v+n` 表示，例如下一版為 `v6`、再下一版為 `v7`。
 
 更新版本時需同步調整：
 
@@ -47,6 +47,20 @@ http://127.0.0.1:8000/?v=v4
 - JSON 匯出與匯入備份
 
 ## 手機 QR 與同步
+
+正式給手機直接安裝時，建議把此專案啟用 GitHub Pages，讓手機開 HTTPS 網址：
+
+```text
+https://shcl1973-spec.github.io/sset-ai-meeting-notebook/?v=v5
+```
+
+手機安裝方式：
+
+- iPhone：用 Safari 開啟 HTTPS 網址，按分享，選「加入主畫面」。
+- Android：用 Chrome 開啟 HTTPS 網址，選「安裝應用程式」或「加入主畫面」。
+- 安裝後，在 App 的「雲端同步」填入 shcl1973 Google Apps Script `/exec` 同步網址與 `SYNC_TOKEN`。
+
+如果還在本機測試：
 
 本機啟動後開啟：
 

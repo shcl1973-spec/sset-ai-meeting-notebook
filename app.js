@@ -1,4 +1,4 @@
-const APP_VERSION = "v4";
+const APP_VERSION = "v5";
 const STORAGE_KEY = "sset-ai-meeting-notebook-v2";
 const SYNC_SETTINGS_KEY = "sset-ai-sync-settings-v1";
 const PANEL_STATE_KEY = "sset-ai-panel-state-v1";
