@@ -1,11 +1,13 @@
 {
   "name": "SSET 業務會議 AI 筆記本",
   "short_name": "SSET AI 筆記",
-  "start_url": "./?v=20260626-fold",
+  "start_url": "./?v=v1",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#eef4f3",
   "theme_color": "#0d9488",
-  "description": "業務會議手寫、錄音、名片、與會人、追蹤信與列印記錄工具。",
+  "description": "業務會議手寫、錄音、逐字稿、名片、與會人、追蹤信與列印記錄工具。",
   "icons": [
     {
       "src": "app-icon.svg",

@@ -233,7 +233,6 @@ function bindFields() {
     ["meetingPlace", "place"],
     ["meetingStage", "stage"],
     ["decisionStatus", "decisionStatus"],
-    ["dealValue", "dealValue"],
     ["nextContactDate", "nextContactDate"],
     ["priorityLevel", "priorityLevel"],
     ["transcriptText", "transcript"],
@@ -250,6 +249,14 @@ function bindFields() {
       scheduleSave();
     });
   });
+
+  els.dealValue.addEventListener("input", () => {
+    const formatted = formatMoneyInput(els.dealValue.value);
+    els.dealValue.value = formatted;
+    activeMeeting.dealValue = formatted;
+    renderAiConsole();
+    scheduleSave();
+  });
 }
 
 function renderMeeting() {
@@ -260,7 +267,8 @@ function renderMeeting() {
   els.meetingPlace.value = activeMeeting.place || "";
   els.meetingStage.value = activeMeeting.stage || "";
   els.decisionStatus.value = activeMeeting.decisionStatus || "探索中";
-  els.dealValue.value = activeMeeting.dealValue || "";
+  activeMeeting.dealValue = formatMoneyInput(activeMeeting.dealValue || "");
+  els.dealValue.value = activeMeeting.dealValue;
   els.nextContactDate.value = activeMeeting.nextContactDate || "";
   els.priorityLevel.value = activeMeeting.priorityLevel || "一般";
   els.transcriptText.value = activeMeeting.transcript || "";
@@ -282,6 +290,14 @@ function renderMeeting() {
   renderCounts();
   renderAiConsole();
   renderSyncSettings();
+}
+
+function formatMoneyInput(value) {
+  const raw = String(value || "").replace(/[^\d.]/g, "");
+  if (!raw) return "";
+  const [integerPart, decimalPart] = raw.split(".");
+  const withCommas = integerPart.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return decimalPart !== undefined ? `${withCommas}.${decimalPart.slice(0, 2)}` : withCommas;
 }
 
 function renderSyncSettings() {
@@ -521,6 +537,7 @@ function setupCanvas() {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   renderCanvasImage();
+  let activePointerId = null;
   let lastPointerCanvasEventAt = 0;
   let lastTouchCanvasEventAt = 0;
 
@@ -543,18 +560,19 @@ function setupCanvas() {
     if (shouldSkipCanvasEvent(event)) return;
     event.preventDefault();
     drawing = true;
+    activePointerId = event.pointerId ?? "touch";
     if (event.pointerId !== undefined && els.sketchCanvas.setPointerCapture) {
       els.sketchCanvas.setPointerCapture(event.pointerId);
     }
     const point = canvasPoint(event);
     ctx.beginPath();
     ctx.moveTo(point.x, point.y);
-    drawStroke(event);
   };
 
   const drawStroke = (event) => {
     if (shouldSkipCanvasEvent(event)) return;
     if (!drawing) return;
+    if (event.pointerId !== undefined && activePointerId !== null && event.pointerId !== activePointerId) return;
     event.preventDefault();
     const point = canvasPoint(event);
     ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over";
@@ -568,7 +586,15 @@ function setupCanvas() {
     if (event && shouldSkipCanvasEvent(event)) return;
     if (event) event.preventDefault();
     if (!drawing) return;
+    if (event?.pointerId !== undefined && els.sketchCanvas.releasePointerCapture) {
+      try {
+        els.sketchCanvas.releasePointerCapture(event.pointerId);
+      } catch (error) {
+        // Pointer capture may already be released on some touch devices.
+      }
+    }
     drawing = false;
+    activePointerId = null;
     ctx.globalCompositeOperation = "source-over";
     captureCanvas();
     scheduleSave();
@@ -588,6 +614,7 @@ function setupCanvas() {
   els.sketchCanvas.addEventListener("mousedown", startStroke);
   els.sketchCanvas.addEventListener("mousemove", drawStroke);
   window.addEventListener("mouseup", endStroke);
+  els.sketchCanvas.addEventListener("contextmenu", (event) => event.preventDefault());
 }
 
 function canvasPoint(event) {
@@ -612,6 +639,8 @@ function renderCanvasImage() {
 }
 
 async function startRecording() {
+  setPanelOpen(els.transcriptPanel, true);
+  els.voiceBody.hidden = false;
   if (!navigator.mediaDevices?.getUserMedia) {
     setRecordStatus("此瀏覽器不支援錄音");
     return;
@@ -624,7 +653,8 @@ async function startRecording() {
     activeMeeting.recordingStartedAt = new Date().toISOString();
     activeMeeting.recordingEndedAt = "";
     activeMeeting.audioFileName = buildRecordingFileName();
-    mediaRecorder = new MediaRecorder(mediaStream);
+    const options = MediaRecorder.isTypeSupported?.("audio/webm;codecs=opus") ? { mimeType: "audio/webm;codecs=opus" } : undefined;
+    mediaRecorder = new MediaRecorder(mediaStream, options);
     mediaRecorder.addEventListener("dataavailable", (event) => {
       if (event.data.size > 0) audioChunks.push(event.data);
     });
@@ -642,7 +672,12 @@ async function startRecording() {
     updateFloatingRecorder(els.transcriptPanel.classList.contains("background-mode"));
     scheduleSave();
   } catch (error) {
-    setRecordStatus("麥克風未啟用");
+    const message = error?.name === "NotAllowedError"
+      ? "麥克風權限被拒絕，請允許瀏覽器使用麥克風"
+      : error?.name === "NotFoundError"
+        ? "找不到麥克風裝置"
+        : "麥克風未啟用或錄音初始化失敗";
+    setRecordStatus(message);
   }
 }
 
