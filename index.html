@@ -7,15 +7,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SSET AI 筆記">
     <title>SSET 業務會議 AI 筆記本</title>
-    <link rel="manifest" href="manifest.webmanifest?v=v1">
+    <link rel="manifest" href="manifest.webmanifest?v=v2">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=v1">
+    <link rel="stylesheet" href="styles.css?v=v2">
   </head>
   <body>
     <div class="mobile-appbar">
       <div>
         <span class="eyebrow">SSET AI Notebook</span>
-        <strong>業務會議 AI 筆記本 <span class="version-badge">v1</span></strong>
+        <strong>業務會議 AI 筆記本 <span class="version-badge">v2</span></strong>
       </div>
       <button id="mobileNewBtn" type="button" aria-label="新增會議">+</button>
     </div>
@@ -212,7 +212,7 @@
                 <h2>雲端同步</h2>
                 <span id="syncStatus" class="status-pill">本機模式</span>
               </div>
-              <label class="stacked-field">同步 API<input id="syncEndpoint" type="url" placeholder="例如 https://your-domain.com/api/sync"></label>
+              <label class="stacked-field">同步 API<input id="syncEndpoint" type="url" placeholder="貼上 Google Apps Script /exec 或 https://your-domain.com/api/sync"></label>
               <label class="stacked-field">同步金鑰<input id="syncToken" type="password" placeholder="可留空；雲端建議設定"></label>
               <label class="stacked-field">裝置名稱<input id="deviceName" type="text" placeholder="例如 王經理 iPhone"></label>
               <div class="sync-actions">
@@ -220,7 +220,7 @@
                 <button id="pushSyncBtn" type="button">上傳</button>
                 <button id="pullSyncBtn" type="button">下載</button>
               </div>
-              <p class="sync-note">同 Wi‑Fi 可同步到這台電腦；部署到雲端後，手機與電腦可跨網路同步。</p>
+              <p class="sync-note">可同步到同 Wi-Fi 電腦、HTTPS 雲端主機，或 shcl1973 Google 雲端硬碟的 Apps Script 同步端點。</p>
             </section>
           </aside>
         </div>
@@ -251,6 +251,6 @@
       <p class="empty-state">尚無資料</p>
     </template>
 
-    <script src="app.js?v=v1"></script>
+    <script src="app.js?v=v2"></script>
   </body>
 </html>

@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0d9488">
     <title>SSET AI 筆記本 QR 安裝</title>
-    <link rel="manifest" href="manifest.webmanifest?v=v1">
+    <link rel="manifest" href="manifest.webmanifest?v=v2">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=v1">
+    <link rel="stylesheet" href="styles.css?v=v2">
   </head>
   <body class="install-page">
     <main class="install-shell">
       <section class="install-hero">
         <div class="brand-mark">AI</div>
         <span class="eyebrow">QR Install</span>
-        <h1>SSET 業務會議 AI 筆記本 <span class="version-badge">v1</span></h1>
+        <h1>SSET 業務會議 AI 筆記本 <span class="version-badge">v2</span></h1>
         <p>手機掃描 QR Code 後，用瀏覽器開啟，再選擇「加入主畫面」即可像 App 一樣使用。</p>
       </section>
 
@@ -37,7 +37,7 @@
 
       <section class="install-card">
         <h2>同步架構說明</h2>
-        <p>同 Wi-Fi 使用時，手機會連到這台電腦的區網網址。若把此專案部署到雲端伺服器，同一個同步 API 可讓手機與電腦共用資料。</p>
+        <p>同 Wi-Fi 使用時，手機會連到這台電腦的區網網址。若使用 shcl1973 Google 雲端硬碟的 Apps Script 同步端點，手機與電腦可跨網路共用資料。</p>
         <ol>
           <li>手機掃 QR Code 開啟 App。</li>
           <li>在 App 的「同步」面板填入同步 API。</li>
@@ -53,7 +53,7 @@
       function card(url, label) {
         const installUrl = new URL(url);
         installUrl.pathname = "/";
-        installUrl.search = "?v=v1";
+        installUrl.search = "?v=v2";
         return `
           <article class="qr-card">
             <img alt="${label} QR Code" src="${qrApi}${encodeURIComponent(installUrl.href)}">

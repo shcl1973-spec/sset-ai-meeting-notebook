@@ -183,6 +183,11 @@ function saveSyncSettings() {
   localStorage.setItem(SYNC_SETTINGS_KEY, JSON.stringify(syncSettings));
 }
 
+function isAppsScriptEndpoint(endpoint) {
+  return /https:\/\/script\.google\.com\/macros\/s\//i.test(endpoint)
+    || /https:\/\/script\.googleusercontent\.com\//i.test(endpoint);
+}
+
 function defaultDeviceName() {
   const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   return mobile ? "手機裝置" : "電腦裝置";
@@ -959,11 +964,14 @@ async function fetchRemoteNotebook() {
   saveSyncSettings();
   const url = new URL(syncSettings.endpoint);
   if (syncSettings.token) url.searchParams.set("token", syncSettings.token);
+  const appsScript = isAppsScriptEndpoint(syncSettings.endpoint);
   const response = await fetch(url.href, {
-    headers: syncSettings.token ? { "X-Sync-Token": syncSettings.token } : {}
+    headers: syncSettings.token && !appsScript ? { "X-Sync-Token": syncSettings.token } : {}
   });
   if (!response.ok) throw new Error(`下載失敗：${response.status}`);
-  return response.json();
+  const result = await response.json();
+  if (result.error) throw new Error(result.error);
+  return result;
 }
 
 async function pushNotebook() {
@@ -971,21 +979,26 @@ async function pushNotebook() {
   captureCanvas();
   saveState();
   setSyncStatus("上傳中");
+  const appsScript = isAppsScriptEndpoint(syncSettings.endpoint);
+  const body = JSON.stringify({
+    token: syncSettings.token,
+    deviceName: syncSettings.deviceName,
+    clientUpdatedAt: new Date(getNotebookUpdatedAt()).toISOString(),
+    data: state
+  });
   const response = await fetch(syncSettings.endpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(syncSettings.token ? { "X-Sync-Token": syncSettings.token } : {})
-    },
-    body: JSON.stringify({
-      token: syncSettings.token,
-      deviceName: syncSettings.deviceName,
-      clientUpdatedAt: new Date(getNotebookUpdatedAt()).toISOString(),
-      data: state
-    })
+    headers: appsScript
+      ? { "Content-Type": "text/plain;charset=utf-8" }
+      : {
+          "Content-Type": "application/json",
+          ...(syncSettings.token ? { "X-Sync-Token": syncSettings.token } : {})
+        },
+    body
   });
   if (!response.ok) throw new Error(`上傳失敗：${response.status}`);
   const result = await response.json();
+  if (result.error) throw new Error(result.error);
   setSyncStatus(`已上傳 ${formatShortTime(result.serverUpdatedAt)}`);
   return result;
 }

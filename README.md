@@ -11,14 +11,14 @@ node .\server.js
 開啟：
 
 ```text
-http://127.0.0.1:8000/?v=v1
+http://127.0.0.1:8000/?v=v2
 ```
 
 在手機瀏覽器開啟同一網址後，可使用瀏覽器的「加入主畫面」安裝成 App。
 
 ## 版本規則
 
-目前手機安裝版為 `v1`。日後每次更新請用 `v+n` 表示，例如下一版為 `v2`、再下一版為 `v3`。
+目前手機安裝版為 `v2`。日後每次更新請用 `v+n` 表示，例如下一版為 `v3`、再下一版為 `v4`。
 
 更新版本時需同步調整：
 
@@ -41,6 +41,7 @@ http://127.0.0.1:8000/?v=v1
 - 名片圖片保存與名片文字解析
 - 與會人、待辦、追蹤信與列印內容管理
 - `/api/sync` 可做本機、區網或雲端同步 API
+- 可透過 `google-drive-sync.gs` 使用 shcl1973 Google 雲端硬碟保存同步資料
 - JSON 匯出與匯入備份
 
 ## 手機 QR 與同步
@@ -63,3 +64,19 @@ http://192.168.x.x:8000/
 $env:SYNC_TOKEN="your-secret"
 node .\server.js
 ```
+
+## shcl1973 Google 雲端硬碟同步
+
+可以使用 shcl1973 的 Google Drive 作為同步儲存位置。做法是用 Google Apps Script 建立一個 Web App 同步端點，App 仍然填「同步 API」，實際資料會寫入 Google Drive 的 `SSET AI Meeting Notebook/notebook.json`。
+
+設定步驟：
+
+1. 用 shcl1973 Google 帳號開啟 [Apps Script](https://script.google.com/)。
+2. 建立新專案，把 `google-drive-sync.gs` 的內容貼到 `Code.gs`。
+3. 到「專案設定」新增 Script Property：`SYNC_TOKEN`，值請設定成一組不容易猜的同步金鑰。
+4. 點「部署」>「新增部署」> 選「網頁應用程式」。
+5. 執行身分選「我」，存取權限依使用情境選「任何知道連結的人」或公司網域內使用者。
+6. 部署後複製 `/exec` 結尾的 Web App URL。
+7. 回到 AI 筆記本，在「雲端同步」填入該 URL，金鑰填入同一組 `SYNC_TOKEN`，按「智慧同步」。
+
+注意：會議資料、逐字稿、名片文字、手寫草稿圖片資料會存在 Google Drive。錄音音檔目前仍會下載保存在操作裝置本機，避免會議錄音檔過大造成同步失敗。
