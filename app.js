@@ -106,7 +106,7 @@ function createMeeting(overrides = {}) {
     date: toDatetimeLocal(now),
     client: "",
     place: "",
-    stage: "初訪",
+    stage: "",
     decisionStatus: "探索中",
     dealValue: "",
     nextContactDate: "",
@@ -257,7 +257,7 @@ function renderMeeting() {
   els.meetingDate.value = activeMeeting.date || "";
   els.meetingClient.value = activeMeeting.client || "";
   els.meetingPlace.value = activeMeeting.place || "";
-  els.meetingStage.value = activeMeeting.stage || "初訪";
+  els.meetingStage.value = activeMeeting.stage || "";
   els.decisionStatus.value = activeMeeting.decisionStatus || "探索中";
   els.dealValue.value = activeMeeting.dealValue || "";
   els.nextContactDate.value = activeMeeting.nextContactDate || "";
@@ -730,7 +730,7 @@ function buildPrintView() {
             <div>日期：${escapeHtml(formatDateTime(meeting.date))}</div>
             <div>客戶/公司：${escapeHtml(meeting.client || "")}</div>
             <div>地點：${escapeHtml(meeting.place || "")}</div>
-            <div>商機階段：${escapeHtml(meeting.stage || "")}</div>
+            <div>會議主題：${escapeHtml(meeting.stage || "")}</div>
             <div>決策狀態：${escapeHtml(meeting.decisionStatus || "")}</div>
             <div>預估金額：${escapeHtml(meeting.dealValue || "")}</div>
             <div>下次聯繫日：${escapeHtml(meeting.nextContactDate || "")}</div>

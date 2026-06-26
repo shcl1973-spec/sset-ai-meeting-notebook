@@ -7,9 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SSET AI 筆記">
     <title>SSET 業務會議 AI 筆記本</title>
-    <link rel="manifest" href="manifest.webmanifest?v=20260626-recording">
+    <link rel="manifest" href="manifest.webmanifest?v=20260626-topic">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=20260626-recording">
+    <link rel="stylesheet" href="styles.css?v=20260626-topic">
   </head>
   <body>
     <div class="mobile-appbar">
@@ -58,17 +58,7 @@
               <label>日期<input id="meetingDate" type="datetime-local"></label>
               <label>客戶/公司<input id="meetingClient" type="text" placeholder="公司名稱"></label>
               <label>地點<input id="meetingPlace" type="text" placeholder="客戶現場、線上、會議室"></label>
-              <label>
-                商機階段
-                <select id="meetingStage">
-                  <option>初訪</option>
-                  <option>需求訪談</option>
-                  <option>方案提案</option>
-                  <option>報價議價</option>
-                  <option>成交追蹤</option>
-                  <option>售後服務</option>
-                </select>
-              </label>
+              <label class="topic-field">會議主題<input id="meetingStage" type="text" placeholder="拜訪議題、討論主軸、專案名稱"></label>
               <label>
                 決策狀態
                 <select id="decisionStatus">
@@ -261,6 +251,6 @@
       <p class="empty-state">尚無資料</p>
     </template>
 
-    <script src="app.js?v=20260626-recording"></script>
+    <script src="app.js?v=20260626-topic"></script>
   </body>
 </html>

@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0d9488">
     <title>SSET AI 筆記本 QR 安裝</title>
-    <link rel="manifest" href="manifest.webmanifest?v=20260626-recording">
+    <link rel="manifest" href="manifest.webmanifest?v=20260626-topic">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=20260626-recording">
+    <link rel="stylesheet" href="styles.css?v=20260626-topic">
   </head>
   <body class="install-page">
     <main class="install-shell">
@@ -44,7 +44,7 @@
       function card(url, label) {
         const installUrl = new URL(url);
         installUrl.pathname = "/";
-        installUrl.search = "?v=20260626-recording";
+        installUrl.search = "?v=20260626-topic";
         return `
           <article class="qr-card">
             <img alt="${label} QR Code" src="${qrApi}${encodeURIComponent(installUrl.href)}">

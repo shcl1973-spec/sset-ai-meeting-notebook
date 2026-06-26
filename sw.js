@@ -1,4 +1,4 @@
-const CACHE_NAME = "sset-ai-notebook-v4";
+const CACHE_NAME = "sset-ai-notebook-v5";
 const ASSETS = [
   "./",
   "./index.html",

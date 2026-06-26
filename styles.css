@@ -251,6 +251,10 @@ button:disabled {
   margin-top: 14px;
 }
 
+.topic-field {
+  grid-column: span 3;
+}
+
 .meeting-meta-grid label,
 .stacked-field,
 .compact-control {
@@ -874,6 +878,10 @@ audio {
 
   .meeting-meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topic-field {
+    grid-column: 1 / -1;
   }
 
   .sync-actions {
