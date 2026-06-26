@@ -1,6 +1,17 @@
+const APP_VERSION = "v4";
 const STORAGE_KEY = "sset-ai-meeting-notebook-v2";
 const SYNC_SETTINGS_KEY = "sset-ai-sync-settings-v1";
 const PANEL_STATE_KEY = "sset-ai-panel-state-v1";
+
+function ensureCurrentVersionUrl() {
+  const url = new URL(location.href);
+  if ((url.pathname === "/" || url.pathname.endsWith("/index.html")) && url.searchParams.get("v") !== APP_VERSION) {
+    url.searchParams.set("v", APP_VERSION);
+    location.replace(url.href);
+  }
+}
+
+ensureCurrentVersionUrl();
 
 const $ = (selector) => document.querySelector(selector);
 const els = {

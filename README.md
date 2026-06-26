@@ -11,14 +11,14 @@ node .\server.js
 開啟：
 
 ```text
-http://127.0.0.1:8000/?v=v3
+http://127.0.0.1:8000/?v=v4
 ```
 
 在手機瀏覽器開啟同一網址後，可使用瀏覽器的「加入主畫面」安裝成 App。
 
 ## 版本規則
 
-目前手機安裝版為 `v3`。日後每次更新請用 `v+n` 表示，例如下一版為 `v4`、再下一版為 `v5`。
+目前手機安裝版為 `v4`。日後每次更新請用 `v+n` 表示，例如下一版為 `v5`、再下一版為 `v6`。
 
 更新版本時需同步調整：
 
@@ -26,6 +26,7 @@ http://127.0.0.1:8000/?v=v3
 - `install.html` 的 manifest、CSS、QR 安裝網址與畫面上的版本標籤
 - `manifest.webmanifest` 的 `start_url`
 - `sw.js` 的 `APP_VERSION`
+- `server.js` 的 `latestAppVersion`
 
 ## 目前能力
 

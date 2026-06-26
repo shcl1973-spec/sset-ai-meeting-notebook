@@ -7,6 +7,7 @@ const root = __dirname;
 const port = Number(process.env.PORT || 8000);
 const host = process.env.HOST || "0.0.0.0";
 const syncToken = process.env.SYNC_TOKEN || "";
+const latestAppVersion = "v4";
 const syncDir = path.join(root, "sync-data");
 const syncFile = path.join(syncDir, "notebook.json");
 
@@ -148,6 +149,17 @@ async function handleApi(request, response, url) {
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host || `127.0.0.1:${port}`}`);
   if (await handleApi(request, response, url)) return;
+
+  if ((url.pathname === "/" || url.pathname === "/index.html") && url.searchParams.get("v") !== latestAppVersion) {
+    url.pathname = "/";
+    url.searchParams.set("v", latestAppVersion);
+    response.writeHead(302, {
+      "Location": url.pathname + url.search,
+      "Cache-Control": "no-store"
+    });
+    response.end();
+    return;
+  }
 
   const pathname = decodeURIComponent(url.pathname);
   const normalized = path.normalize(pathname === "/" ? "/index.html" : pathname);
