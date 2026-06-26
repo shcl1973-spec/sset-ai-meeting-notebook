@@ -454,38 +454,81 @@ function setupCanvas() {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   renderCanvasImage();
-  els.sketchCanvas.addEventListener("pointerdown", (event) => {
+  let lastPointerCanvasEventAt = 0;
+  let lastTouchCanvasEventAt = 0;
+
+  const shouldSkipCanvasEvent = (event) => {
+    const now = Date.now();
+    if (event.type.startsWith("pointer")) {
+      lastPointerCanvasEventAt = now;
+      return false;
+    }
+    if (event.type.startsWith("touch")) {
+      if (now - lastPointerCanvasEventAt < 700) return true;
+      lastTouchCanvasEventAt = now;
+      return false;
+    }
+    if (event.type.startsWith("mouse") && (now - lastTouchCanvasEventAt < 700 || now - lastPointerCanvasEventAt < 700)) return true;
+    return false;
+  };
+
+  const startStroke = (event) => {
+    if (shouldSkipCanvasEvent(event)) return;
+    event.preventDefault();
     drawing = true;
-    els.sketchCanvas.setPointerCapture(event.pointerId);
+    if (event.pointerId !== undefined && els.sketchCanvas.setPointerCapture) {
+      els.sketchCanvas.setPointerCapture(event.pointerId);
+    }
     const point = canvasPoint(event);
     ctx.beginPath();
     ctx.moveTo(point.x, point.y);
-  });
-  els.sketchCanvas.addEventListener("pointermove", (event) => {
+    drawStroke(event);
+  };
+
+  const drawStroke = (event) => {
+    if (shouldSkipCanvasEvent(event)) return;
     if (!drawing) return;
+    event.preventDefault();
     const point = canvasPoint(event);
     ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over";
     ctx.strokeStyle = els.penColor.value;
     ctx.lineWidth = erasing ? Number(els.penSize.value) * 2.2 : Number(els.penSize.value);
     ctx.lineTo(point.x, point.y);
     ctx.stroke();
-  });
+  };
+
+  const endStroke = (event) => {
+    if (event && shouldSkipCanvasEvent(event)) return;
+    if (event) event.preventDefault();
+    if (!drawing) return;
+    drawing = false;
+    ctx.globalCompositeOperation = "source-over";
+    captureCanvas();
+    scheduleSave();
+  };
+
+  els.sketchCanvas.addEventListener("pointerdown", startStroke);
+  els.sketchCanvas.addEventListener("pointermove", drawStroke);
   ["pointerup", "pointercancel", "pointerleave"].forEach((name) => {
-    els.sketchCanvas.addEventListener(name, () => {
-      if (!drawing) return;
-      drawing = false;
-      ctx.globalCompositeOperation = "source-over";
-      captureCanvas();
-      scheduleSave();
-    });
+    els.sketchCanvas.addEventListener(name, endStroke);
   });
+
+  els.sketchCanvas.addEventListener("touchstart", startStroke, { passive: false });
+  els.sketchCanvas.addEventListener("touchmove", drawStroke, { passive: false });
+  els.sketchCanvas.addEventListener("touchend", endStroke, { passive: false });
+  els.sketchCanvas.addEventListener("touchcancel", endStroke, { passive: false });
+
+  els.sketchCanvas.addEventListener("mousedown", startStroke);
+  els.sketchCanvas.addEventListener("mousemove", drawStroke);
+  window.addEventListener("mouseup", endStroke);
 }
 
 function canvasPoint(event) {
   const rect = els.sketchCanvas.getBoundingClientRect();
+  const source = event.touches?.[0] || event.changedTouches?.[0] || event;
   return {
-    x: ((event.clientX - rect.left) / rect.width) * els.sketchCanvas.width,
-    y: ((event.clientY - rect.top) / rect.height) * els.sketchCanvas.height
+    x: ((source.clientX - rect.left) / rect.width) * els.sketchCanvas.width,
+    y: ((source.clientY - rect.top) / rect.height) * els.sketchCanvas.height
   };
 }
 
