@@ -1,5 +1,6 @@
 const STORAGE_KEY = "sset-ai-meeting-notebook-v2";
 const SYNC_SETTINGS_KEY = "sset-ai-sync-settings-v1";
+const PANEL_STATE_KEY = "sset-ai-panel-state-v1";
 
 const $ = (selector) => document.querySelector(selector);
 const els = {
@@ -327,6 +328,72 @@ function renderAiConsole() {
 
 function emptyNode() {
   return els.emptyMeetingTemplate.content.firstElementChild.cloneNode(true);
+}
+
+function setupPanelCollapses() {
+  const openPanels = new Set(JSON.parse(localStorage.getItem(PANEL_STATE_KEY) || "[]"));
+  document.querySelectorAll(".panel").forEach((panel, index) => {
+    const header = [...panel.children].find((child) => child.classList.contains("panel-header"));
+    if (!header || panel.querySelector(":scope > .panel-body")) return;
+
+    const title = header.querySelector("h2")?.textContent?.trim() || `主題 ${index + 1}`;
+    const panelId = panel.id || `panel-${title.replace(/\s+/g, "-")}`;
+    panel.dataset.panelId = panelId;
+
+    const body = document.createElement("div");
+    body.className = "panel-body";
+    while (header.nextSibling) body.appendChild(header.nextSibling);
+    panel.appendChild(body);
+
+    const toggle = document.createElement("button");
+    toggle.className = "panel-toggle";
+    toggle.type = "button";
+    toggle.setAttribute("aria-controls", panelId);
+    toggle.addEventListener("click", () => togglePanel(panel));
+
+    const target = header.querySelector(".tool-row") || header;
+    target.appendChild(toggle);
+
+    const shouldOpen = openPanels.has(panelId);
+    setPanelOpen(panel, shouldOpen);
+  });
+
+  document.querySelectorAll(".mobile-tabs a").forEach((link) => {
+    link.addEventListener("click", () => {
+      const hash = link.getAttribute("href");
+      setTimeout(() => expandPanelByHash(hash), 80);
+    });
+  });
+
+  if (location.hash) setTimeout(() => expandPanelByHash(location.hash), 80);
+}
+
+function togglePanel(panel) {
+  setPanelOpen(panel, panel.classList.contains("is-collapsed"));
+}
+
+function setPanelOpen(panel, open) {
+  panel.classList.toggle("is-collapsed", !open);
+  const toggle = panel.querySelector(".panel-toggle");
+  if (toggle) {
+    toggle.textContent = open ? "收合" : "顯示";
+    toggle.setAttribute("aria-expanded", String(open));
+  }
+  savePanelState();
+}
+
+function expandPanelByHash(hash) {
+  if (!hash) return;
+  const target = document.querySelector(hash);
+  const panel = target?.classList?.contains("panel") ? target : target?.closest?.(".panel");
+  if (panel) setPanelOpen(panel, true);
+}
+
+function savePanelState() {
+  const openIds = [...document.querySelectorAll(".panel:not(.is-collapsed)")]
+    .map((panel) => panel.dataset.panelId)
+    .filter(Boolean);
+  localStorage.setItem(PANEL_STATE_KEY, JSON.stringify(openIds));
 }
 
 function renderAttendees() {
@@ -998,6 +1065,7 @@ function escapeHtml(value) {
 }
 
 function setupEvents() {
+  setupPanelCollapses();
   bindFields();
   setupCanvas();
   setupForms();
@@ -1026,6 +1094,7 @@ function setupEvents() {
   els.stopRecordBtn.addEventListener("click", () => stopRecording(true));
   els.backgroundRecordBtn.addEventListener("click", () => toggleBackgroundRecording());
   els.showVoiceBtn.addEventListener("click", () => {
+    setPanelOpen(els.transcriptPanel, true);
     toggleBackgroundRecording(false);
     document.querySelector("#voice").scrollIntoView({ behavior: "smooth", block: "start" });
   });

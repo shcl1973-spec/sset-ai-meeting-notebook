@@ -375,6 +375,29 @@ textarea {
   margin-bottom: 12px;
 }
 
+.panel.is-collapsed .panel-header {
+  margin-bottom: 0;
+}
+
+.panel-body {
+  display: grid;
+  gap: 12px;
+}
+
+.panel.is-collapsed .panel-body {
+  display: none;
+}
+
+.panel-toggle {
+  min-height: 34px;
+  border-color: rgba(13, 148, 136, 0.2);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  padding: 6px 11px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .panel h2 {
   margin: 0;
   font-size: 17px;
@@ -911,6 +934,10 @@ audio {
   .panel-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .panel-toggle {
+    min-height: 40px;
   }
 
   #sketchCanvas {
