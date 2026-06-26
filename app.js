@@ -1,4 +1,5 @@
 const STORAGE_KEY = "sset-ai-meeting-notebook-v2";
+const SYNC_SETTINGS_KEY = "sset-ai-sync-settings-v1";
 
 const $ = (selector) => document.querySelector(selector);
 const els = {
@@ -55,6 +56,13 @@ const els = {
   printSketch: $("#printSketch"),
   printTranscript: $("#printTranscript"),
   printEmail: $("#printEmail"),
+  syncStatus: $("#syncStatus"),
+  syncEndpoint: $("#syncEndpoint"),
+  syncToken: $("#syncToken"),
+  deviceName: $("#deviceName"),
+  syncNowBtn: $("#syncNowBtn"),
+  pushSyncBtn: $("#pushSyncBtn"),
+  pullSyncBtn: $("#pullSyncBtn"),
   exportBtn: $("#exportBtn"),
   importInput: $("#importInput"),
   printView: $("#printView"),
@@ -62,6 +70,7 @@ const els = {
 };
 
 let state = loadState();
+let syncSettings = loadSyncSettings();
 let activeMeetingId = state.activeMeetingId;
 let activeMeeting = getActiveMeeting();
 let drawing = false;
@@ -131,6 +140,33 @@ function loadState() {
     ]
   });
   return { activeMeetingId: starter.id, meetings: [starter] };
+}
+
+function loadSyncSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SYNC_SETTINGS_KEY) || "{}");
+    return {
+      endpoint: saved.endpoint || `${location.origin}/api/sync`,
+      token: saved.token || "",
+      deviceName: saved.deviceName || defaultDeviceName()
+    };
+  } catch (error) {
+    return { endpoint: `${location.origin}/api/sync`, token: "", deviceName: defaultDeviceName() };
+  }
+}
+
+function saveSyncSettings() {
+  syncSettings = {
+    endpoint: els.syncEndpoint.value.trim() || `${location.origin}/api/sync`,
+    token: els.syncToken.value,
+    deviceName: els.deviceName.value.trim() || defaultDeviceName()
+  };
+  localStorage.setItem(SYNC_SETTINGS_KEY, JSON.stringify(syncSettings));
+}
+
+function defaultDeviceName() {
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return mobile ? "手機裝置" : "電腦裝置";
 }
 
 function getActiveMeeting() {
@@ -222,6 +258,13 @@ function renderMeeting() {
   renderTasks();
   renderCounts();
   renderAiConsole();
+  renderSyncSettings();
+}
+
+function renderSyncSettings() {
+  els.syncEndpoint.value = syncSettings.endpoint || `${location.origin}/api/sync`;
+  els.syncToken.value = syncSettings.token || "";
+  els.deviceName.value = syncSettings.deviceName || defaultDeviceName();
 }
 
 function renderMeetingList() {
@@ -621,6 +664,118 @@ async function importData(event) {
   }
 }
 
+function getNotebookUpdatedAt(notebook = state) {
+  return notebook.meetings
+    .map((meeting) => Date.parse(meeting.updatedAt || meeting.createdAt || ""))
+    .filter((time) => Number.isFinite(time))
+    .sort((a, b) => b - a)[0] || 0;
+}
+
+function mergeNotebook(localNotebook, remoteNotebook) {
+  const byId = new Map();
+  [...(remoteNotebook.meetings || []), ...(localNotebook.meetings || [])].forEach((meeting) => {
+    const existing = byId.get(meeting.id);
+    const incomingTime = Date.parse(meeting.updatedAt || meeting.createdAt || "") || 0;
+    const existingTime = existing ? Date.parse(existing.updatedAt || existing.createdAt || "") || 0 : -1;
+    if (!existing || incomingTime >= existingTime) byId.set(meeting.id, meeting);
+  });
+  const meetings = [...byId.values()].sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  return {
+    ...localNotebook,
+    ...remoteNotebook,
+    activeMeetingId: localNotebook.activeMeetingId || remoteNotebook.activeMeetingId || meetings[0]?.id,
+    meetings
+  };
+}
+
+async function fetchRemoteNotebook() {
+  saveSyncSettings();
+  const url = new URL(syncSettings.endpoint);
+  if (syncSettings.token) url.searchParams.set("token", syncSettings.token);
+  const response = await fetch(url.href, {
+    headers: syncSettings.token ? { "X-Sync-Token": syncSettings.token } : {}
+  });
+  if (!response.ok) throw new Error(`下載失敗：${response.status}`);
+  return response.json();
+}
+
+async function pushNotebook() {
+  saveSyncSettings();
+  captureCanvas();
+  saveState();
+  setSyncStatus("上傳中");
+  const response = await fetch(syncSettings.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(syncSettings.token ? { "X-Sync-Token": syncSettings.token } : {})
+    },
+    body: JSON.stringify({
+      token: syncSettings.token,
+      deviceName: syncSettings.deviceName,
+      clientUpdatedAt: new Date(getNotebookUpdatedAt()).toISOString(),
+      data: state
+    })
+  });
+  if (!response.ok) throw new Error(`上傳失敗：${response.status}`);
+  const result = await response.json();
+  setSyncStatus(`已上傳 ${formatShortTime(result.serverUpdatedAt)}`);
+  return result;
+}
+
+async function pullNotebook() {
+  setSyncStatus("下載中");
+  const remote = await fetchRemoteNotebook();
+  if (!remote.data?.meetings?.length) {
+    setSyncStatus("雲端尚無資料");
+    return null;
+  }
+  state = mergeNotebook(state, remote.data);
+  activeMeetingId = state.activeMeetingId || state.meetings[0]?.id;
+  activeMeeting = getActiveMeeting();
+  saveState();
+  renderMeeting();
+  setSyncStatus(`已下載 ${formatShortTime(remote.serverUpdatedAt)}`);
+  return remote;
+}
+
+async function smartSync() {
+  try {
+    setSyncStatus("同步中");
+    const remote = await fetchRemoteNotebook();
+    if (remote.data?.meetings?.length) {
+      state = mergeNotebook(state, remote.data);
+      activeMeetingId = state.activeMeetingId || state.meetings[0]?.id;
+      activeMeeting = getActiveMeeting();
+      saveState();
+      renderMeeting();
+    }
+    await pushNotebook();
+    setSyncStatus("同步完成");
+  } catch (error) {
+    setSyncStatus(error.message || "同步失敗");
+  }
+}
+
+async function runSyncAction(action) {
+  try {
+    await action();
+  } catch (error) {
+    setSyncStatus(error.message || "同步失敗");
+  }
+}
+
+function setSyncStatus(message) {
+  els.syncStatus.textContent = message;
+}
+
+function formatShortTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+}
+
 function duplicateMeeting() {
   captureCanvas();
   const clone = JSON.parse(JSON.stringify(activeMeeting));
@@ -719,6 +874,10 @@ function setupEvents() {
     setTimeout(() => { els.copyEmailBtn.textContent = "複製追蹤信"; }, 1400);
   });
   els.parseCardBtn.addEventListener("click", parseCurrentCardText);
+  [els.syncEndpoint, els.syncToken, els.deviceName].forEach((input) => input.addEventListener("change", saveSyncSettings));
+  els.syncNowBtn.addEventListener("click", smartSync);
+  els.pushSyncBtn.addEventListener("click", () => runSyncAction(pushNotebook));
+  els.pullSyncBtn.addEventListener("click", () => runSyncAction(pullNotebook));
   els.exportBtn.addEventListener("click", exportData);
   els.importInput.addEventListener("change", importData);
   els.printBtn.addEventListener("click", () => {

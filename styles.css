@@ -176,7 +176,7 @@ button:disabled {
 .sidebar-actions {
   margin-top: auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
@@ -567,6 +567,114 @@ audio {
   padding: 0;
 }
 
+.sync-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sync-actions {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 8px;
+}
+
+.sync-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.install-page {
+  min-height: 100vh;
+}
+
+.install-shell {
+  width: min(980px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0;
+}
+
+.install-hero,
+.install-card {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  backdrop-filter: blur(12px);
+}
+
+.install-hero {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.install-hero .brand-mark {
+  width: 56px;
+  height: 56px;
+}
+
+.install-hero h1,
+.install-card h2 {
+  margin: 0;
+}
+
+.install-hero p,
+.install-card p,
+.install-card li {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.qr-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 14px;
+}
+
+.qr-card img {
+  width: min(260px, 100%);
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: white;
+  justify-self: center;
+}
+
+.qr-card strong,
+.qr-card a {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.qr-card a {
+  margin-top: 6px;
+  color: var(--accent-strong);
+}
+
 .empty-state {
   margin: 0;
   color: var(--muted);
@@ -675,6 +783,7 @@ audio {
 
   .sidebar-actions {
     margin-top: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .meeting-header {
@@ -695,6 +804,10 @@ audio {
 
   .meeting-meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sync-actions {
+    grid-template-columns: 1fr;
   }
 
   .header-actions,

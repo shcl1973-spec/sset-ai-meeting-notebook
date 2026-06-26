@@ -1,7 +1,7 @@
 {
   "name": "SSET 業務會議 AI 筆記本",
   "short_name": "SSET AI 筆記",
-  "start_url": ".",
+  "start_url": "./?v=20260626-sync",
   "display": "standalone",
   "background_color": "#eef4f3",
   "theme_color": "#0d9488",

@@ -41,6 +41,7 @@
 
         <div class="sidebar-actions">
           <button id="exportBtn" type="button">匯出</button>
+          <a class="file-button" href="install.html" target="_blank" rel="noreferrer">QR 安裝</a>
           <label class="file-button">
             匯入
             <input id="importInput" type="file" accept="application/json">
@@ -206,6 +207,22 @@
               <label><input id="printTranscript" type="checkbox" checked> 逐字稿</label>
               <label><input id="printEmail" type="checkbox" checked> 追蹤信</label>
             </section>
+
+            <section class="panel sync-panel" id="sync">
+              <div class="panel-header">
+                <h2>雲端同步</h2>
+                <span id="syncStatus" class="status-pill">本機模式</span>
+              </div>
+              <label class="stacked-field">同步 API<input id="syncEndpoint" type="url" placeholder="例如 https://your-domain.com/api/sync"></label>
+              <label class="stacked-field">同步金鑰<input id="syncToken" type="password" placeholder="可留空；雲端建議設定"></label>
+              <label class="stacked-field">裝置名稱<input id="deviceName" type="text" placeholder="例如 王經理 iPhone"></label>
+              <div class="sync-actions">
+                <button id="syncNowBtn" class="ai-action" type="button">智慧同步</button>
+                <button id="pushSyncBtn" type="button">上傳</button>
+                <button id="pullSyncBtn" type="button">下載</button>
+              </div>
+              <p class="sync-note">同 Wi‑Fi 可同步到這台電腦；部署到雲端後，手機與電腦可跨網路同步。</p>
+            </section>
           </aside>
         </div>
       </main>
@@ -216,7 +233,7 @@
       <a href="#ai">AI</a>
       <a href="#sketch">手寫</a>
       <a href="#voice">錄音</a>
-      <a href="#people">名片</a>
+      <a href="#sync">同步</a>
     </nav>
 
     <section id="printView" class="print-view" aria-hidden="true"></section>

@@ -1,7 +1,8 @@
-const CACHE_NAME = "sset-ai-notebook-v2";
+const CACHE_NAME = "sset-ai-notebook-v3";
 const ASSETS = [
   "./",
   "./index.html",
+  "./install.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",
