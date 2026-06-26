@@ -7,9 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SSET AI 筆記">
     <title>SSET 業務會議 AI 筆記本</title>
-    <link rel="manifest" href="manifest.webmanifest?v=20260626">
+    <link rel="manifest" href="manifest.webmanifest?v=20260626-recording">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=20260626-mobile">
+    <link rel="stylesheet" href="styles.css?v=20260626-recording">
   </head>
   <body>
     <div class="mobile-appbar">
@@ -134,16 +134,25 @@
               <div class="tool-row">
                 <button id="recordBtn" class="record-action" type="button">開始錄音</button>
                 <button id="stopRecordBtn" type="button" disabled>停止</button>
+                <button id="backgroundRecordBtn" type="button">背景錄音</button>
+                <button id="downloadRecordingBtn" type="button" disabled>下載音檔</button>
                 <button id="summarizeBtn" class="ai-action" type="button">AI 整理</button>
               </div>
             </div>
-            <div class="record-state">
-              <span id="recordDot"></span>
-              <span id="recordStatus">待命</span>
-              <audio id="audioPlayback" controls></audio>
+            <div class="voice-body" id="voiceBody">
+              <div class="record-state">
+                <span id="recordDot"></span>
+                <span id="recordStatus">待命</span>
+                <audio id="audioPlayback" controls></audio>
+              </div>
+              <div class="record-meta">
+                <span id="recordStartText">開始：--</span>
+                <span id="recordEndText">結束：--</span>
+                <span id="recordFileName">檔名：--</span>
+              </div>
+              <label class="stacked-field">即時逐字稿<textarea id="transcriptText" rows="8" placeholder="錄音時若瀏覽器支援語音辨識，文字會即時出現在這裡。也可以手動貼上逐字稿。"></textarea></label>
+              <label class="stacked-field">重點摘要<textarea id="summaryText" rows="5" placeholder="按 AI 整理後產生會議摘要，也可以自行修改。"></textarea></label>
             </div>
-            <label class="stacked-field">即時逐字稿<textarea id="transcriptText" rows="8" placeholder="錄音時若瀏覽器支援語音辨識，文字會即時出現在這裡。也可以手動貼上逐字稿。"></textarea></label>
-            <label class="stacked-field">重點摘要<textarea id="summaryText" rows="5" placeholder="按 AI 整理後產生會議摘要，也可以自行修改。"></textarea></label>
           </section>
 
           <section class="panel notes-panel" id="notes">
@@ -236,12 +245,22 @@
       <a href="#sync">同步</a>
     </nav>
 
+    <div class="floating-recorder" id="floatingRecorder" hidden>
+      <span class="floating-dot"></span>
+      <div>
+        <strong id="floatingRecordTitle">背景錄音中</strong>
+        <span id="floatingRecordMeta">錄音持續執行，逐字稿同步更新。</span>
+      </div>
+      <button id="showVoiceBtn" type="button">顯示</button>
+      <button id="floatingStopBtn" type="button">停止</button>
+    </div>
+
     <section id="printView" class="print-view" aria-hidden="true"></section>
 
     <template id="emptyMeetingTemplate">
       <p class="empty-state">尚無資料</p>
     </template>
 
-    <script src="app.js?v=20260626-mobile"></script>
+    <script src="app.js?v=20260626-recording"></script>
   </body>
 </html>

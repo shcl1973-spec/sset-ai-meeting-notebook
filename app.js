@@ -33,9 +33,21 @@ const els = {
   sketchCanvas: $("#sketchCanvas"),
   recordBtn: $("#recordBtn"),
   stopRecordBtn: $("#stopRecordBtn"),
+  backgroundRecordBtn: $("#backgroundRecordBtn"),
+  downloadRecordingBtn: $("#downloadRecordingBtn"),
   summarizeBtn: $("#summarizeBtn"),
   recordDot: $("#recordDot"),
   recordStatus: $("#recordStatus"),
+  recordStartText: $("#recordStartText"),
+  recordEndText: $("#recordEndText"),
+  recordFileName: $("#recordFileName"),
+  transcriptPanel: $("#voice"),
+  voiceBody: $("#voiceBody"),
+  floatingRecorder: $("#floatingRecorder"),
+  floatingRecordTitle: $("#floatingRecordTitle"),
+  floatingRecordMeta: $("#floatingRecordMeta"),
+  showVoiceBtn: $("#showVoiceBtn"),
+  floatingStopBtn: $("#floatingStopBtn"),
   audioPlayback: $("#audioPlayback"),
   transcriptText: $("#transcriptText"),
   summaryText: $("#summaryText"),
@@ -76,10 +88,13 @@ let activeMeeting = getActiveMeeting();
 let drawing = false;
 let erasing = false;
 let mediaRecorder = null;
+let mediaStream = null;
 let audioChunks = [];
 let recognition = null;
 let transcriptBase = "";
 let saveTimer = null;
+let currentRecordingBlob = null;
+let recordingFinalized = false;
 
 const ctx = els.sketchCanvas.getContext("2d");
 
@@ -104,6 +119,9 @@ function createMeeting(overrides = {}) {
     followupEmail: "",
     sketch: "",
     audio: "",
+    audioFileName: "",
+    recordingStartedAt: "",
+    recordingEndedAt: "",
     attendees: [],
     cards: [],
     tasks: [],
@@ -251,6 +269,10 @@ function renderMeeting() {
   els.followupText.value = activeMeeting.followup || "";
   els.followupEmailText.value = activeMeeting.followupEmail || "";
   els.audioPlayback.src = activeMeeting.audio || "";
+  els.recordStartText.textContent = `開始：${formatDateTime(activeMeeting.recordingStartedAt) || "--"}`;
+  els.recordEndText.textContent = `結束：${formatDateTime(activeMeeting.recordingEndedAt) || "--"}`;
+  els.recordFileName.textContent = `檔名：${activeMeeting.audioFileName || "--"}`;
+  els.downloadRecordingBtn.disabled = !activeMeeting.audio;
   renderCanvasImage();
   renderMeetingList();
   renderAttendees();
@@ -485,36 +507,136 @@ async function startRecording() {
     return;
   }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
+    currentRecordingBlob = null;
+    recordingFinalized = false;
+    activeMeeting.recordingStartedAt = new Date().toISOString();
+    activeMeeting.recordingEndedAt = "";
+    activeMeeting.audioFileName = buildRecordingFileName();
+    mediaRecorder = new MediaRecorder(mediaStream);
     mediaRecorder.addEventListener("dataavailable", (event) => {
       if (event.data.size > 0) audioChunks.push(event.data);
     });
     mediaRecorder.addEventListener("stop", async () => {
-      stream.getTracks().forEach((track) => track.stop());
-      activeMeeting.audio = await blobToDataUrl(new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" }));
-      els.audioPlayback.src = activeMeeting.audio;
-      scheduleSave();
+      await finalizeRecording(true);
     });
-    mediaRecorder.start();
+    mediaRecorder.start(1000);
     startSpeechRecognition();
     els.recordBtn.disabled = true;
     els.stopRecordBtn.disabled = false;
+    els.downloadRecordingBtn.disabled = true;
     els.recordDot.classList.add("live");
     setRecordStatus("錄音中");
+    renderRecordingMeta();
+    updateFloatingRecorder(els.transcriptPanel.classList.contains("background-mode"));
+    scheduleSave();
   } catch (error) {
     setRecordStatus("麥克風未啟用");
   }
 }
 
-function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+function stopRecording(download = true) {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    try {
+      mediaRecorder.requestData();
+    } catch (error) {
+      // Some browsers do not allow requestData during state transitions.
+    }
+    mediaRecorder.stop();
+  } else {
+    finalizeRecording(download);
+  }
   if (recognition) recognition.stop();
   els.recordBtn.disabled = false;
   els.stopRecordBtn.disabled = true;
   els.recordDot.classList.remove("live");
-  setRecordStatus("已停止");
+  updateFloatingRecorder(false);
+  setRecordStatus("正在保存錄音");
+}
+
+async function finalizeRecording(download) {
+  if (recordingFinalized) return;
+  recordingFinalized = true;
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((track) => track.stop());
+    mediaStream = null;
+  }
+  activeMeeting.recordingEndedAt = new Date().toISOString();
+  activeMeeting.audioFileName = activeMeeting.audioFileName || buildRecordingFileName();
+  const mimeType = mediaRecorder?.mimeType || "audio/webm";
+  currentRecordingBlob = new Blob(audioChunks, { type: mimeType });
+  if (currentRecordingBlob.size > 0) {
+    activeMeeting.audio = await blobToDataUrl(currentRecordingBlob);
+    els.audioPlayback.src = activeMeeting.audio;
+    els.downloadRecordingBtn.disabled = false;
+    if (download) downloadRecordingBlob(currentRecordingBlob);
+  }
+  mediaRecorder = null;
+  renderRecordingMeta();
+  setRecordStatus("已停止並保存");
+  scheduleSave();
+}
+
+function renderRecordingMeta() {
+  els.recordStartText.textContent = `開始：${formatDateTime(activeMeeting.recordingStartedAt) || "--"}`;
+  els.recordEndText.textContent = `結束：${formatDateTime(activeMeeting.recordingEndedAt) || "--"}`;
+  els.recordFileName.textContent = `檔名：${activeMeeting.audioFileName || "--"}`;
+}
+
+function buildRecordingFileName() {
+  const client = activeMeeting.client || "未填客戶";
+  const topic = activeMeeting.title || "拜訪議題";
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  return `${sanitizeFileName(client)}_${sanitizeFileName(topic)}_${stamp}.webm`;
+}
+
+function sanitizeFileName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, "_")
+    .slice(0, 80) || "meeting";
+}
+
+function downloadRecordingBlob(blob = currentRecordingBlob) {
+  if (!blob && activeMeeting.audio) {
+    downloadDataUrl(activeMeeting.audio, activeMeeting.audioFileName || buildRecordingFileName());
+    return;
+  }
+  if (!blob) return;
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = activeMeeting.audioFileName || buildRecordingFileName();
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1200);
+}
+
+function downloadDataUrl(dataUrl, fileName) {
+  const anchor = document.createElement("a");
+  anchor.href = dataUrl;
+  anchor.download = fileName;
+  anchor.click();
+}
+
+function toggleBackgroundRecording(force) {
+  const enabled = typeof force === "boolean" ? force : !els.transcriptPanel.classList.contains("background-mode");
+  els.transcriptPanel.classList.toggle("background-mode", enabled);
+  els.backgroundRecordBtn.textContent = enabled ? "顯示錄音區" : "背景錄音";
+  updateFloatingRecorder(enabled && isRecording());
+}
+
+function isRecording() {
+  return Boolean(mediaRecorder && mediaRecorder.state !== "inactive");
+}
+
+function updateFloatingRecorder(show) {
+  els.floatingRecorder.hidden = !show;
+  if (show) {
+    els.floatingRecordTitle.textContent = activeMeeting.audioFileName || "背景錄音中";
+    els.floatingRecordMeta.textContent = `${activeMeeting.client || "未填客戶"} · ${activeMeeting.title || "拜訪議題"}`;
+  }
 }
 
 function startSpeechRecognition() {
@@ -858,7 +980,14 @@ function setupEvents() {
     scheduleSave();
   });
   els.recordBtn.addEventListener("click", startRecording);
-  els.stopRecordBtn.addEventListener("click", stopRecording);
+  els.stopRecordBtn.addEventListener("click", () => stopRecording(true));
+  els.backgroundRecordBtn.addEventListener("click", () => toggleBackgroundRecording());
+  els.showVoiceBtn.addEventListener("click", () => {
+    toggleBackgroundRecording(false);
+    document.querySelector("#voice").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  els.floatingStopBtn.addEventListener("click", () => stopRecording(true));
+  els.downloadRecordingBtn.addEventListener("click", () => downloadRecordingBlob());
   els.summarizeBtn.addEventListener("click", summarizeMeeting);
   els.emailDraftBtn.addEventListener("click", () => generateFollowupEmail(true));
   els.copyEmailBtn.addEventListener("click", async () => {
@@ -887,7 +1016,15 @@ function setupEvents() {
   els.duplicateBtn.addEventListener("click", duplicateMeeting);
   els.deleteBtn.addEventListener("click", deleteMeeting);
   window.addEventListener("beforeprint", buildPrintView);
-  window.addEventListener("beforeunload", () => {
+  window.addEventListener("pagehide", () => {
+    if (isRecording()) stopRecording(true);
+  });
+  window.addEventListener("beforeunload", (event) => {
+    if (isRecording()) {
+      stopRecording(true);
+      event.preventDefault();
+      event.returnValue = "錄音正在保存，請確認音檔已下載後再關閉。";
+    }
     captureCanvas();
     saveState();
   });
