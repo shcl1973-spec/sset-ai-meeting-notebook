@@ -447,18 +447,24 @@ textarea {
     linear-gradient(#ffffff 29px, #e1ece9 30px),
     linear-gradient(90deg, #ffffff 29px, #edf5f3 30px);
   background-size: 30px 30px;
-  touch-action: none;
-  -ms-touch-action: none;
-  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -ms-touch-action: pan-y;
+  overscroll-behavior: auto;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   cursor: crosshair;
 }
 
-.writing-panel .panel-body {
+.finger-draw-active #sketchCanvas {
   touch-action: none;
+  -ms-touch-action: none;
   overscroll-behavior: contain;
+}
+
+.writing-panel .panel-body {
+  touch-action: pan-y;
+  overscroll-behavior: auto;
 }
 
 .compact-control {

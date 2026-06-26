@@ -7,15 +7,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SSET AI 筆記">
     <title>SSET 業務會議 AI 筆記本</title>
-    <link rel="manifest" href="manifest.webmanifest?v=v2">
+    <link rel="manifest" href="manifest.webmanifest?v=v3">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=v2">
+    <link rel="stylesheet" href="styles.css?v=v3">
   </head>
   <body>
     <div class="mobile-appbar">
       <div>
         <span class="eyebrow">SSET AI Notebook</span>
-        <strong>業務會議 AI 筆記本 <span class="version-badge">v2</span></strong>
+        <strong>業務會議 AI 筆記本 <span class="version-badge">v3</span></strong>
       </div>
       <button id="mobileNewBtn" type="button" aria-label="新增會議">+</button>
     </div>
@@ -111,6 +111,7 @@
               <div class="tool-row">
                 <label class="compact-control">筆色<input id="penColor" type="color" value="#0f766e"></label>
                 <label class="compact-control">粗細<input id="penSize" type="range" min="2" max="18" value="5"></label>
+                <button id="fingerDrawBtn" type="button" aria-pressed="false">手指書寫</button>
                 <button id="eraserBtn" type="button">橡皮擦</button>
                 <button id="clearCanvasBtn" type="button">清除</button>
               </div>
@@ -251,6 +252,6 @@
       <p class="empty-state">尚無資料</p>
     </template>
 
-    <script src="app.js?v=v2"></script>
+    <script src="app.js?v=v3"></script>
   </body>
 </html>

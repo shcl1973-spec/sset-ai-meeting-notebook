@@ -29,6 +29,7 @@ const els = {
   lastSaved: $("#lastSaved"),
   penColor: $("#penColor"),
   penSize: $("#penSize"),
+  fingerDrawBtn: $("#fingerDrawBtn"),
   eraserBtn: $("#eraserBtn"),
   clearCanvasBtn: $("#clearCanvasBtn"),
   sketchCanvas: $("#sketchCanvas"),
@@ -88,6 +89,7 @@ let activeMeetingId = state.activeMeetingId;
 let activeMeeting = getActiveMeeting();
 let drawing = false;
 let erasing = false;
+let fingerDrawingEnabled = false;
 let mediaRecorder = null;
 let mediaStream = null;
 let audioChunks = [];
@@ -550,9 +552,17 @@ function setupCanvas() {
     const now = Date.now();
     if (event.type.startsWith("pointer")) {
       lastPointerCanvasEventAt = now;
+      if (event.pointerType === "touch" && !fingerDrawingEnabled) {
+        lastTouchCanvasEventAt = now;
+        return true;
+      }
       return false;
     }
     if (event.type.startsWith("touch")) {
+      if (!fingerDrawingEnabled) {
+        lastTouchCanvasEventAt = now;
+        return true;
+      }
       if (now - lastPointerCanvasEventAt < 700) return true;
       lastTouchCanvasEventAt = now;
       return false;
@@ -620,6 +630,12 @@ function setupCanvas() {
   els.sketchCanvas.addEventListener("mousemove", drawStroke);
   window.addEventListener("mouseup", endStroke);
   els.sketchCanvas.addEventListener("contextmenu", (event) => event.preventDefault());
+}
+
+function updateFingerDrawMode() {
+  document.body.classList.toggle("finger-draw-active", fingerDrawingEnabled);
+  els.fingerDrawBtn.setAttribute("aria-pressed", String(fingerDrawingEnabled));
+  els.fingerDrawBtn.textContent = fingerDrawingEnabled ? "手指書寫中" : "手指書寫";
 }
 
 function canvasPoint(event) {
@@ -1127,6 +1143,11 @@ function setupEvents() {
     saveState();
     renderMeeting();
   }));
+  updateFingerDrawMode();
+  els.fingerDrawBtn.addEventListener("click", () => {
+    fingerDrawingEnabled = !fingerDrawingEnabled;
+    updateFingerDrawMode();
+  });
   els.eraserBtn.addEventListener("click", () => {
     erasing = !erasing;
     els.eraserBtn.classList.toggle("active", erasing);
