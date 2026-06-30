@@ -3,3 +3,9 @@ server.err.log
 sync-data/
 .DS_Store
 Thumbs.db
+node_modules/
+www/
+android/
+ios/
+*.apk
+*.aab

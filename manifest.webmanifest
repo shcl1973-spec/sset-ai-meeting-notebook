@@ -1,7 +1,7 @@
 {
   "name": "SSET 業務會議 AI 筆記本",
   "short_name": "SSET AI 筆記",
-  "start_url": "./?v=v8",
+  "start_url": "./?v=v9",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

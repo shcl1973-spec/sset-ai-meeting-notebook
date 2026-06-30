@@ -11,14 +11,14 @@ node .\server.js
 開啟：
 
 ```text
-http://127.0.0.1:8000/?v=v8
+http://127.0.0.1:8000/?v=v9
 ```
 
 在手機瀏覽器開啟同一網址後，可使用瀏覽器的「加入主畫面」安裝成 App。
 
 ## 版本規則
 
-目前手機安裝版為 `v8`。日後每次更新請用 `v+n` 表示，例如下一版為 `v9`、再下一版為 `v10`。
+目前手機安裝版為 `v9`。日後每次更新請用 `v+n` 表示，例如下一版為 `v10`、再下一版為 `v11`。
 
 更新版本時需同步調整：
 
@@ -32,6 +32,7 @@ http://127.0.0.1:8000/?v=v8
 
 - v7 新增音訊來源選擇與「重讀音訊」；外接音訊可指定為錄音來源，即時逐字稿仍需瀏覽器或系統預設麥克風能收到該音訊。
 - v8 手寫草稿改為長頁面，右側新增滑桿可快速上下滑動。
+- v9 加入 Android APK 打包設定，GitHub Actions 可產生手機/平板安裝檔。
 - 手機版頂部 App Bar 與底部快速導航
 - PWA manifest 與 service worker，可加入手機主畫面
 - `install.html` 提供手機 QR Code 安裝/開啟頁
@@ -53,7 +54,7 @@ http://127.0.0.1:8000/?v=v8
 正式給手機直接安裝時，建議把此專案啟用 GitHub Pages，讓手機開 HTTPS 網址：
 
 ```text
-https://shcl1973-spec.github.io/sset-ai-meeting-notebook/?v=v8
+https://shcl1973-spec.github.io/sset-ai-meeting-notebook/?v=v9
 ```
 
 手機安裝方式：

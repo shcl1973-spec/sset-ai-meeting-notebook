@@ -1,0 +1,11 @@
+{
+  "appId": "com.sset.ai.meetingnotebook",
+  "appName": "SSET AI Notebook",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

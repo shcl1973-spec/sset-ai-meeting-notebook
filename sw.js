@@ -1,4 +1,4 @@
-const APP_VERSION = "v8";
+const APP_VERSION = "v9";
 const CACHE_NAME = `sset-ai-notebook-${APP_VERSION}`;
 const ASSETS = [
   "./",
