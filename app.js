@@ -1,4 +1,4 @@
-const APP_VERSION = "v5";
+const APP_VERSION = "v6";
 const STORAGE_KEY = "sset-ai-meeting-notebook-v2";
 const SYNC_SETTINGS_KEY = "sset-ai-sync-settings-v1";
 const PANEL_STATE_KEY = "sset-ai-panel-state-v1";
@@ -646,7 +646,7 @@ function setupCanvas() {
 function updateFingerDrawMode() {
   document.body.classList.toggle("finger-draw-active", fingerDrawingEnabled);
   els.fingerDrawBtn.setAttribute("aria-pressed", String(fingerDrawingEnabled));
-  els.fingerDrawBtn.textContent = fingerDrawingEnabled ? "手指書寫中" : "手指書寫";
+  els.fingerDrawBtn.textContent = fingerDrawingEnabled ? "手指/電容筆書寫中" : "手指/電容筆書寫";
 }
 
 function canvasPoint(event) {
