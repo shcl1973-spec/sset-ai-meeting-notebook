@@ -1,4 +1,4 @@
-const APP_VERSION = "v7";
+const APP_VERSION = "v8";
 const STORAGE_KEY = "sset-ai-meeting-notebook-v2";
 const SYNC_SETTINGS_KEY = "sset-ai-sync-settings-v1";
 const PANEL_STATE_KEY = "sset-ai-panel-state-v1";
@@ -44,6 +44,8 @@ const els = {
   fingerDrawBtn: $("#fingerDrawBtn"),
   eraserBtn: $("#eraserBtn"),
   clearCanvasBtn: $("#clearCanvasBtn"),
+  sketchScrollFrame: $("#sketchScrollFrame"),
+  sketchScrollSlider: $("#sketchScrollSlider"),
   sketchCanvas: $("#sketchCanvas"),
   recordBtn: $("#recordBtn"),
   stopRecordBtn: $("#stopRecordBtn"),
@@ -559,6 +561,7 @@ function setupCanvas() {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   renderCanvasImage();
+  updateSketchScrollSlider();
   let activePointerId = null;
   let lastPointerCanvasEventAt = 0;
   let lastTouchCanvasEventAt = 0;
@@ -645,6 +648,12 @@ function setupCanvas() {
   els.sketchCanvas.addEventListener("mousemove", drawStroke);
   window.addEventListener("mouseup", endStroke);
   els.sketchCanvas.addEventListener("contextmenu", (event) => event.preventDefault());
+  els.sketchScrollFrame.addEventListener("scroll", updateSketchScrollSlider);
+  els.sketchScrollSlider.addEventListener("input", () => {
+    const maxScroll = Math.max(0, els.sketchScrollFrame.scrollHeight - els.sketchScrollFrame.clientHeight);
+    els.sketchScrollFrame.scrollTop = maxScroll * (Number(els.sketchScrollSlider.value) / 1000);
+  });
+  window.addEventListener("resize", updateSketchScrollSlider);
 }
 
 function updateFingerDrawMode() {
@@ -668,10 +677,26 @@ function captureCanvas() {
 
 function renderCanvasImage() {
   ctx.clearRect(0, 0, els.sketchCanvas.width, els.sketchCanvas.height);
-  if (!activeMeeting?.sketch) return;
+  if (!activeMeeting?.sketch) {
+    updateSketchScrollSlider();
+    return;
+  }
   const image = new Image();
-  image.onload = () => ctx.drawImage(image, 0, 0, els.sketchCanvas.width, els.sketchCanvas.height);
+  image.onload = () => {
+    const scale = Math.min(els.sketchCanvas.width / image.naturalWidth, els.sketchCanvas.height / image.naturalHeight);
+    const width = image.naturalWidth * scale;
+    const height = image.naturalHeight * scale;
+    ctx.drawImage(image, 0, 0, width, height);
+    updateSketchScrollSlider();
+  };
   image.src = activeMeeting.sketch;
+}
+
+function updateSketchScrollSlider() {
+  const maxScroll = Math.max(0, els.sketchScrollFrame.scrollHeight - els.sketchScrollFrame.clientHeight);
+  const value = maxScroll ? Math.round((els.sketchScrollFrame.scrollTop / maxScroll) * 1000) : 0;
+  els.sketchScrollSlider.value = String(value);
+  els.sketchScrollSlider.disabled = maxScroll <= 1;
 }
 
 function loadSelectedAudioInput() {

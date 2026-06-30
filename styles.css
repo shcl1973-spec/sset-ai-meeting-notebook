@@ -437,12 +437,41 @@ textarea {
   align-content: start;
 }
 
-#sketchCanvas {
-  width: 100%;
-  aspect-ratio: 1100 / 620;
-  display: block;
+.sketch-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.sketch-scroll-frame {
+  max-height: min(68vh, 760px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid rgba(15, 118, 110, 0.18);
   border-radius: 8px;
+  background: #f8fafc;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 148, 136, 0.55) rgba(226, 232, 240, 0.9);
+}
+
+.sketch-scroll-frame::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sketch-scroll-frame::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.9);
+}
+
+.sketch-scroll-frame::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.62);
+}
+
+#sketchCanvas {
+  width: 100%;
+  aspect-ratio: 1100 / 1320;
+  display: block;
   background:
     linear-gradient(#ffffff 29px, #e1ece9 30px),
     linear-gradient(90deg, #ffffff 29px, #edf5f3 30px);
@@ -454,6 +483,30 @@ textarea {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   cursor: crosshair;
+}
+
+.sketch-scroll-control {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-width: 34px;
+  padding: 8px 3px;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  border-radius: 8px;
+  background: rgba(240, 253, 250, 0.72);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sketch-scroll-control input {
+  width: 28px;
+  height: min(54vh, 620px);
+  min-height: 240px;
+  padding: 0;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  accent-color: var(--accent);
 }
 
 .finger-draw-active #sketchCanvas {
@@ -977,9 +1030,23 @@ audio {
     min-height: 40px;
   }
 
-  #sketchCanvas {
-    min-height: 300px;
-    aspect-ratio: 4 / 3;
+  .sketch-board {
+    grid-template-columns: minmax(0, 1fr) 32px;
+    gap: 8px;
+  }
+
+  .sketch-scroll-frame {
+    max-height: min(62vh, 560px);
+  }
+
+  .sketch-scroll-control {
+    min-width: 32px;
+    padding-inline: 2px;
+  }
+
+  .sketch-scroll-control input {
+    height: min(48vh, 460px);
+    min-height: 220px;
   }
 
   .business-card {

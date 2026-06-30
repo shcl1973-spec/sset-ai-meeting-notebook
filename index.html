@@ -7,15 +7,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SSET AI 筆記">
     <title>SSET 業務會議 AI 筆記本</title>
-    <link rel="manifest" href="manifest.webmanifest?v=v7">
+    <link rel="manifest" href="manifest.webmanifest?v=v8">
     <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=v7">
+    <link rel="stylesheet" href="styles.css?v=v8">
   </head>
   <body>
     <div class="mobile-appbar">
       <div>
         <span class="eyebrow">SSET AI Notebook</span>
-        <strong>業務會議 AI 筆記本 <span class="version-badge">v7</span></strong>
+        <strong>業務會議 AI 筆記本 <span class="version-badge">v8</span></strong>
       </div>
       <button id="mobileNewBtn" type="button" aria-label="新增會議">+</button>
     </div>
@@ -25,7 +25,7 @@
         <div class="brand">
           <div class="brand-mark">AI</div>
           <div>
-            <h1>SSET 業務會議 AI 筆記本 <span class="version-badge">v7</span></h1>
+            <h1>SSET 業務會議 AI 筆記本 <span class="version-badge">v8</span></h1>
             <p id="storageState">本機保存中</p>
           </div>
         </div>
@@ -116,7 +116,15 @@
                 <button id="clearCanvasBtn" type="button">清除</button>
               </div>
             </div>
-            <canvas id="sketchCanvas" width="1100" height="620"></canvas>
+            <div class="sketch-board">
+              <div class="sketch-scroll-frame" id="sketchScrollFrame">
+                <canvas id="sketchCanvas" width="1100" height="1320"></canvas>
+              </div>
+              <label class="sketch-scroll-control">
+                <span>滑動</span>
+                <input id="sketchScrollSlider" type="range" min="0" max="1000" value="0" orient="vertical" aria-label="手寫草稿上下滑動">
+              </label>
+            </div>
           </section>
 
           <section class="panel transcript-panel" id="voice">
@@ -255,6 +263,6 @@
       <p class="empty-state">尚無資料</p>
     </template>
 
-    <script src="app.js?v=v7"></script>
+    <script src="app.js?v=v8"></script>
   </body>
 </html>
