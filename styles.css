@@ -472,6 +472,12 @@ textarea {
   align-items: center;
 }
 
+.audio-source-control {
+  grid-template-columns: auto minmax(150px, 1fr);
+  min-width: min(280px, 100%);
+  flex: 1 1 240px;
+}
+
 .compact-control input[type="range"] {
   padding: 0;
 }
@@ -492,6 +498,13 @@ textarea {
   margin-bottom: 12px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.record-help {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .record-meta span {

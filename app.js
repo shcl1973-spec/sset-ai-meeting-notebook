@@ -1,7 +1,8 @@
-const APP_VERSION = "v6";
+const APP_VERSION = "v7";
 const STORAGE_KEY = "sset-ai-meeting-notebook-v2";
 const SYNC_SETTINGS_KEY = "sset-ai-sync-settings-v1";
 const PANEL_STATE_KEY = "sset-ai-panel-state-v1";
+const AUDIO_INPUT_KEY = "sset-ai-audio-input-v1";
 
 function ensureCurrentVersionUrl() {
   const url = new URL(location.href);
@@ -49,6 +50,9 @@ const els = {
   backgroundRecordBtn: $("#backgroundRecordBtn"),
   downloadRecordingBtn: $("#downloadRecordingBtn"),
   summarizeBtn: $("#summarizeBtn"),
+  audioInputSelect: $("#audioInputSelect"),
+  refreshAudioInputsBtn: $("#refreshAudioInputsBtn"),
+  audioInputHint: $("#audioInputHint"),
   recordDot: $("#recordDot"),
   recordStatus: $("#recordStatus"),
   recordStartText: $("#recordStartText"),
@@ -670,6 +674,68 @@ function renderCanvasImage() {
   image.src = activeMeeting.sketch;
 }
 
+function loadSelectedAudioInput() {
+  return localStorage.getItem(AUDIO_INPUT_KEY) || "";
+}
+
+function saveSelectedAudioInput() {
+  localStorage.setItem(AUDIO_INPUT_KEY, els.audioInputSelect.value || "");
+}
+
+function currentAudioInputLabel() {
+  return els.audioInputSelect.selectedOptions?.[0]?.textContent?.trim() || "系統預設麥克風";
+}
+
+function selectedAudioConstraints() {
+  const deviceId = els.audioInputSelect.value;
+  return deviceId ? { audio: { deviceId: { exact: deviceId } } } : { audio: true };
+}
+
+function updateAudioInputHint() {
+  const label = currentAudioInputLabel();
+  els.audioInputHint.textContent = `錄音來源：${label}。即時逐字稿由瀏覽器語音辨識處理；外部音訊若沒有文字，請把該裝置設為手機或電腦的預設麥克風。`;
+}
+
+async function refreshAudioInputs(requestPermission = false) {
+  if (!navigator.mediaDevices?.enumerateDevices) {
+    els.audioInputHint.textContent = "此瀏覽器無法列出音訊輸入裝置。";
+    return;
+  }
+
+  let tempStream = null;
+  try {
+    if (requestPermission && navigator.mediaDevices.getUserMedia) {
+      tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+
+    const selected = loadSelectedAudioInput();
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const audioInputs = devices.filter((device) => device.kind === "audioinput");
+    els.audioInputSelect.innerHTML = "";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "系統預設麥克風";
+    els.audioInputSelect.append(defaultOption);
+
+    audioInputs.forEach((device, index) => {
+      const option = document.createElement("option");
+      option.value = device.deviceId;
+      option.textContent = device.label || `音訊輸入 ${index + 1}`;
+      els.audioInputSelect.append(option);
+    });
+
+    if ([...els.audioInputSelect.options].some((option) => option.value === selected)) {
+      els.audioInputSelect.value = selected;
+    }
+    updateAudioInputHint();
+  } catch (error) {
+    els.audioInputHint.textContent = "無法讀取音訊裝置，請允許麥克風權限後再按「重讀音訊」。";
+  } finally {
+    tempStream?.getTracks().forEach((track) => track.stop());
+  }
+}
+
 async function startRecording() {
   setPanelOpen(els.transcriptPanel, true);
   els.voiceBody.hidden = false;
@@ -678,7 +744,9 @@ async function startRecording() {
     return;
   }
   try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    saveSelectedAudioInput();
+    mediaStream = await navigator.mediaDevices.getUserMedia(selectedAudioConstraints());
+    await refreshAudioInputs(false);
     audioChunks = [];
     currentRecordingBlob = null;
     recordingFinalized = false;
@@ -694,12 +762,12 @@ async function startRecording() {
       await finalizeRecording(true);
     });
     mediaRecorder.start(1000);
-    startSpeechRecognition();
     els.recordBtn.disabled = true;
     els.stopRecordBtn.disabled = false;
     els.downloadRecordingBtn.disabled = true;
     els.recordDot.classList.add("live");
-    setRecordStatus("錄音中");
+    setRecordStatus(`錄音中：${currentAudioInputLabel()}`);
+    startSpeechRecognition();
     renderRecordingMeta();
     updateFloatingRecorder(els.transcriptPanel.classList.contains("background-mode"));
     scheduleSave();
@@ -827,6 +895,7 @@ function startSpeechRecognition() {
   recognition.continuous = true;
   recognition.interimResults = true;
   transcriptBase = activeMeeting.transcript || "";
+  recognition.onstart = () => setRecordStatus(`錄音中：${currentAudioInputLabel()}，即時逐字稿已啟動`);
   recognition.onresult = (event) => {
     let interim = "";
     let finalText = transcriptBase;
@@ -839,11 +908,15 @@ function startSpeechRecognition() {
     activeMeeting.transcript = els.transcriptText.value;
     scheduleSave();
   };
-  recognition.onerror = () => setRecordStatus("錄音中，轉文字暫停");
+  recognition.onerror = () => setRecordStatus("錄音中，逐字稿暫停；外部音訊請設為系統預設麥克風");
   recognition.onend = () => {
     transcriptBase = els.transcriptText.value ? `${els.transcriptText.value}\n` : "";
   };
-  recognition.start();
+  try {
+    recognition.start();
+  } catch (error) {
+    setRecordStatus("錄音中，逐字稿無法啟動；請確認瀏覽器權限與預設麥克風");
+  }
 }
 
 function setRecordStatus(message) {
@@ -1144,6 +1217,8 @@ function setupEvents() {
   bindFields();
   setupCanvas();
   setupForms();
+  refreshAudioInputs(false);
+  navigator.mediaDevices?.addEventListener?.("devicechange", () => refreshAudioInputs(false));
   els.searchInput.addEventListener("input", renderMeetingList);
   [els.newMeetingBtn, els.mobileNewBtn].forEach((button) => button.addEventListener("click", () => {
     captureCanvas();
@@ -1173,6 +1248,11 @@ function setupEvents() {
   els.recordBtn.addEventListener("click", startRecording);
   els.stopRecordBtn.addEventListener("click", () => stopRecording(true));
   els.backgroundRecordBtn.addEventListener("click", () => toggleBackgroundRecording());
+  els.audioInputSelect.addEventListener("change", () => {
+    saveSelectedAudioInput();
+    updateAudioInputHint();
+  });
+  els.refreshAudioInputsBtn.addEventListener("click", () => refreshAudioInputs(true));
   els.showVoiceBtn.addEventListener("click", () => {
     setPanelOpen(els.transcriptPanel, true);
     toggleBackgroundRecording(false);

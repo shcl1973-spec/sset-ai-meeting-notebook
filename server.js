@@ -7,7 +7,7 @@ const root = __dirname;
 const port = Number(process.env.PORT || 8000);
 const host = process.env.HOST || "0.0.0.0";
 const syncToken = process.env.SYNC_TOKEN || "";
-const latestAppVersion = "v6";
+const latestAppVersion = "v7";
 const syncDir = path.join(root, "sync-data");
 const syncFile = path.join(syncDir, "notebook.json");
 
